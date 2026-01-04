@@ -1,0 +1,107 @@
+
+--- FEEDBACK APP FULL SCRIPT (HTML + CSS + JS for submission) ---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Feedback App</title>
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #f0f4ff, #dfe9ff);
+      margin: 0; padding: 0;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px;
+      margin: 50px auto;
+    }
+    h2 {
+      text-align: center; color: #333; margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%; height: 120px; padding: 12px;
+      border: 1px solid #ccc; border-radius: 10px;
+      font-size: 15px; resize: none; outline: none;
+    }
+    button {
+      width: 100%; margin-top: 20px; padding: 12px;
+      border: none; border-radius: 10px; background-color: #007BFF;
+      color: #fff; font-weight: 600; font-size: 16px;
+      cursor: pointer; transition: background-color 0.3s ease;
+    }
+    button:hover { background-color: #0056b3; }
+    .emoji { font-size: 2rem; cursor: pointer; margin: 0 6px; }
+    .emoji.active { color: orange; }
+    .feedback-result { margin-top: 20px; text-align: center; font-weight: bold; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Give Your Valuable Feedback</h2>
+    <textarea id="feedback" placeholder="Type your feedback here..."></textarea>
+
+    <div id="emoji-rating">
+      <span class="emoji">&#128545;</span>
+      <span class="emoji">&#128542;</span>
+      <span class="emoji">&#128528;</span>
+      <span class="emoji">&#128522;</span>
+      <span class="emoji">&#128525;</span>
+      <span id="ratingText">(Neutral)</span>
+    </div>
+
+    <button id="submitBtn">Submit</button>
+    <div class="feedback-result" id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('submitBtn').addEventListener('click', async function () {
+      const feedback = document.getElementById('feedback').value.trim();
+      const ratingText = document.getElementById('ratingText').innerText;
+      if (!feedback) {
+        alert("Please enter your feedback before submitting!");
+        return;
+      }
+      try {
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ feedback, rating: ratingText })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          document.getElementById('feedback').value = '';
+          document.getElementById('result').innerText = 
+            `Feedback submitted successfully! Sentiment: ${data.sentiment.toUpperCase()}`;
+        } else {
+          document.getElementById('result').innerText =
+            'Error submitting feedback. Please try again.';
+        }
+      } catch (error) {
+        console.error(error);
+        document.getElementById('result').innerText = 'Server error. Try again later.';
+      }
+    });
+
+    // Emoji rating logic
+    const emojis = document.querySelectorAll('.emoji');
+    const sentimentMap = ["Very Bad", "Bad", "Neutral", "Good", "Very Good"];
+    emojis.forEach((emoji, index) => {
+      emoji.addEventListener('click', () => {
+        emojis.forEach((e, i) => e.classList.toggle('active', i === index));
+        document.getElementById('ratingText').innerText = sentimentMap[index];
+      });
+    });
+  </script>
+</body>
+</html>
+
+---
+
+# To run: Save as feedback.html, then open in browser. Backend /api/feedback endpoint should be running to receive POSTed feedback, analyze sentiment, and respond with JSON: {sentiment: "positive"|"negative"|"neutral"}.
